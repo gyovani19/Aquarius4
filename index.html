@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+  <script>
+    let mic, fft;
+    let permissionGranted = false;
+
+    function setup() {
+      createCanvas(400, 200);
+
+      // Solicitar permissão para acessar o microfone
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+          mic = new p5.AudioIn();
+          mic.setStream(stream);
+          mic.start();
+
+          fft = new p5.FFT();
+          fft.setInput(mic);
+
+          permissionGranted = true;
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+    }
+
+    function draw() {
+      background(0);
+      
+      if (permissionGranted) {
+        let waveform = fft.waveform();
+        noFill();
+        beginShape();
+        stroke(255);
+        strokeWeight(2);
+        for (let i = 0; i < waveform.length; i++) {
+          let x = map(i, 0, waveform.length, 0, width);
+          let y = map(waveform[i], -1, 1, 0, height);
+          vertex(x, y);
+        }
+        endShape();
+      } else {
+        textSize(16);
+        fill(255);
+        textAlign(CENTER, CENTER);
+        text('Permissão para acessar o microfone não concedida', width / 2, height / 2);
+      }
+    }
+  </script>
+</body>
+</html>
