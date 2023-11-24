@@ -1,55 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.js"></script>
 </head>
 <body>
   <script>
-    let mic, fft;
-    let permissionGranted = false;
+    let audioContext, analyser, microphone, permissionGranted = false;
 
-    function setup() {
-      createCanvas(400, 200);
-
-      // Solicitar permissão para acessar o microfone
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-          mic = new p5.AudioIn();
-          mic.setStream(stream);
-          mic.start();
-
-          fft = new p5.FFT();
-          fft.setInput(mic);
-
-          permissionGranted = true;
-        })
-        .catch(function(err) {
-          console.error(err);
-        });
+    async function setupMicrophone() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new AudioContext();
+        microphone = audioContext.createMediaStreamSource(stream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        microphone.connect(analyser);
+        permissionGranted = true;
+      } catch (err) {
+        console.error('Erro ao acessar o microfone:', err);
+      }
     }
 
     function draw() {
-      background(0);
-      
-      if (permissionGranted && mic) {
-        let waveform = fft.waveform();
-        noFill();
-        beginShape();
-        stroke(255);
-        strokeWeight(2);
-        for (let i = 0; i < waveform.length; i++) {
-          let x = map(i, 0, waveform.length, 0, width);
-          let y = map(waveform[i], -1, 1, 0, height);
-          vertex(x, y);
-        }
-        endShape();
+      if (permissionGranted && analyser) {
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteTimeDomainData(dataArray);
+
+        // O código de visualização da forma de onda vai aqui
+        // Você pode usar os dados em 'dataArray' para desenhar a forma de onda
+        console.log(dataArray);
       } else {
-        textSize(16);
-        fill(255);
-        textAlign(CENTER, CENTER);
-        text('Permissão para acessar o microfone não concedida ou não inicializado', width / 2, height / 2);
+        console.log('Permissão para acessar o microfone não concedida ou não inicializado');
       }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      setupMicrophone();
+      setInterval(draw, 100); // Atualiza a visualização periodicamente
+    });
   </script>
 </body>
 </html>
