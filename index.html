@@ -31,7 +31,7 @@
     function draw() {
       background(0);
       
-      if (permissionGranted) {
+      if (permissionGranted && mic) {
         let waveform = fft.waveform();
         noFill();
         beginShape();
@@ -47,7 +47,7 @@
         textSize(16);
         fill(255);
         textAlign(CENTER, CENTER);
-        text('Permissão para acessar o microfone não concedida', width / 2, height / 2);
+        text('Permissão para acessar o microfone não concedida ou não inicializado', width / 2, height / 2);
       }
     }
   </script>
